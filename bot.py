@@ -2,6 +2,7 @@ import asyncio
 import json
 import os
 import sys
+import requests
 from aiohttp import ClientSession, ClientTimeout
 from datetime import datetime, timezone
 from colorama import Fore, Style, init
@@ -9,9 +10,13 @@ from tabulate import tabulate
 
 init(autoreset=True)
 
+# Telegram Bot Configuration
+TELEGRAM_BOT_TOKEN = "YOUR_TELEGRAM_BOT_TOKEN"
+TELEGRAM_CHAT_ID = "YOUR_CHAT_ID"
+
 class TeneoBot:
     def __init__(self):
-        self.bearer_token = "YOUR_BEARER_TOKEN_HERE"  # ← Put your latest token here
+        self.bearer_token = "YOUR_BEARER_TOKEN_HERE"
         self.headers = {
             "Accept": "application/json",
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36",
@@ -33,6 +38,7 @@ class TeneoBot:
                 async with ClientSession(timeout=ClientTimeout(total=300)) as session:
                     async with session.ws_connect(wss_url, headers=headers) as wss:
                         print(f"{Fore.GREEN}[ BOT ] ✅ WebSocket Connected{Style.RESET_ALL}")
+                        self.send_telegram_message("✅ Teneo Bot Connected!")
 
                         async def send_heartbeat():
                             while True:
@@ -54,9 +60,9 @@ class TeneoBot:
                                 }
 
             except Exception as e:
-                print(f"{Fore.RED}[ BOT ] ❌ WebSocket Disconnected! Possible token expired!{Style.RESET_ALL}")
-                print(f"{Fore.YELLOW}[ ALERT ] ⚠️ Please update your token in bot.py and restart the bot.{Style.RESET_ALL}")
-                break  # Stop trying to reconnect (manual intervention needed)
+                print(f"{Fore.RED}[ BOT ] ❌ WebSocket Disconnected, Reconnecting in 5s...{Style.RESET_ALL}")
+                self.send_telegram_message("❌ WebSocket Disconnected! Reconnecting in 5s...")
+                await asyncio.sleep(5)
 
     def print_ping_log(self):
         """Display PING log"""
@@ -88,8 +94,18 @@ class TeneoBot:
         ))
         print("\n" + Fore.YELLOW + "=" * 50)
 
+    def send_telegram_message(self, message):
+        """Send a notification to Telegram"""
+        url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+        data = {"chat_id": TELEGRAM_CHAT_ID, "text": message}
+        try:
+            requests.post(url, json=data)
+        except Exception as e:
+            print(f"{Fore.RED}[ ERROR ] ❌ Failed to send Telegram message: {e}{Style.RESET_ALL}")
+
     async def main(self):
         print(f"{Fore.YELLOW}[ INFO ] 🔢 Starting Bot...{Style.RESET_ALL}")
+        self.send_telegram_message("🚀 Teneo Bot Started!")
         await self.connect_websocket()
 
 if __name__ == "__main__":

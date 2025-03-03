@@ -10,7 +10,7 @@ from tabulate import tabulate
 init(autoreset=True)
 
 class TeneoBot:
-    def init(self):
+    def __init__(self):
         self.bearer_token = "YOUR_BEARER_TOKEN_HERE"  # Use the token from your image
         self.headers = {
             "Accept": "application/json",
@@ -91,6 +91,6 @@ class TeneoBot:
         print(f"{Fore.YELLOW}[ INFO ] 🔢 Starting Bot...{Style.RESET_ALL}")
         await self.connect_websocket()
 
-if name == "main":
+if __name__ == "__main__":
     bot = TeneoBot()
     asyncio.run(bot.main())
